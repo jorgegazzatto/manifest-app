@@ -1,0 +1,36 @@
+# Environments & Secrets
+.env
+*.env
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python & Backend
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+backend/venv/
+backend/.venv/
+backend/audio_storage/*
+!backend/audio_storage/.gitkeep
+
+# Node & Mobile (Expo / React Native)
+node_modules/
+mobile/node_modules/
+.expo/
+mobile/.expo/
+dist/
+web-build/
+
+# OS & Editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
