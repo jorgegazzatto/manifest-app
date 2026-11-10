@@ -1,5 +1,5 @@
-// Altere para o IP público ou domínio da sua VPS em produção
-export const API_BASE_URL = "http://136.248.82.204:8000";
+// URL de produção com domínio e SSL gerenciado pelo Dokploy / Cloudflare
+export const API_BASE_URL = "https://manifest.elohdigital.com.br";
 
 export interface AnswerItem {
   question_id: number;
@@ -10,6 +10,7 @@ export interface AnswerItem {
 export interface SessionData {
   session_id: string;
   user_name: string;
+  focus_area: string;
   script: string;
   audio_url: string;
   duration_seconds: number;
