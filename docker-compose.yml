@@ -29,7 +29,7 @@ services:
     container_name: manifest_nginx
     restart: always
     ports:
-      - "80:80"
+      - "8080:80"
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - ./backend/audio_storage:/usr/share/nginx/html/audios:ro
