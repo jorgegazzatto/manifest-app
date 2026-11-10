@@ -1,5 +1,13 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+} from 'react-native';
 
 export interface QuizAnswer {
   question_id: number;
@@ -8,50 +16,64 @@ export interface QuizAnswer {
   answer: string;
 }
 
+const CATEGORY_ICONS: Record<string, string> = {
+  "Identidade & Autoimagem": "✨",
+  "Momento Atual": "⚡",
+  "Crenças & Bloqueios": "🔓",
+  "Finanças & Abundância": "💎",
+  "Relacionamentos & Afeto": "🕊️",
+  "Saúde & Vitalidade": "🌱",
+  "Ancoragem Final": "🔮",
+};
+
 export const QUESTIONS = [
   // --- PILAR 1: Identidade e Autoimagem ---
   {
     id: 1,
     category: "Identidade & Autoimagem",
+    subtitle: "Consciência & Autoimagem",
     title: "Como você se descreve no momento em relação ao seu potencial?",
     options: [
       "Sinto que estou muito abaixo do que posso alcançar",
       "Tenho lampejos de grandeza, mas perco a consistência",
       "Estou em expansão, mas quero acelerar minha evolução",
-      "Totalmente alinhado e pronto para o próximo nível"
+      "Totalmente alinhado(a) e pronto(a) para o próximo nível"
     ]
   },
   {
     id: 2,
     category: "Identidade & Autoimagem",
+    subtitle: "Vórtice Central",
     title: "Qual é a sua principal intenção de manifestação nesta jornada?",
     options: [
-      "Abundância Financeira e Prosperidade",
-      "Amor, Conexão e Relacionamento",
-      "Saúde, Energia Vital e Paz Interior",
-      "Clareza de Propósito e Carreira"
+      "Abundância Financeira e Prosperidade Ilimitada",
+      "Amor Consciente, Conexão e Magnetismo",
+      "Saúde Vibrante, Vitalidade e Paz Interior",
+      "Clareza de Propósito, Soberania e Carreira"
     ]
   },
   {
     id: 3,
     category: "Identidade & Autoimagem",
+    subtitle: "Frequência Emocional",
     title: "Quando você pensa no seu futuro ideal, qual sentimento predomina?",
     options: [
-      "Entusiasmo e certeza absoluta",
+      "Entusiasmo ardente e certeza absoluta",
       "Esperança misturada com receio de falhar",
-      "Ansiedade por ainda não ver os resultados",
-      "Dúvida se sou realmente merecedor(a)"
+      "Ansiedade por ainda não ver os resultados físicos",
+      "Dúvida oculta se sou verdadeiramente merecedor(a)"
     ]
   },
   {
     id: 4,
     category: "Identidade & Autoimagem",
+    subtitle: "Prática Diária",
     title: "Com que frequência você pratica afirmações ou visualização consciente?",
     options: [
-      "Nunca pratiquei de forma consistente",
-      "Às vezes, quando me sinto angustiado(a)",
-      "Regularmente, mas quero aprofundar a técnica",
-      "Diariamente, como parte da minha rotina"
+      "Nunca pratiquei com disciplina contínua",
+      "Às vezes, apenas quando sinto angústia ou pressão",
+      "Regularmente, mas sinto falta de um método guiado",
+      "Diariamente, como um pilar sagrado da minha rotina"
     ]
   },
 
@@ -59,34 +81,37 @@ export const QUESTIONS = [
   {
     id: 5,
     category: "Momento Atual",
+    subtitle: "Diagnóstico de Obstáculos",
     title: "Qual é o maior desafio que você enfrenta no seu dia a dia?",
     options: [
-      "Sobrecarga mental e estresse constante",
-      "Falta de foco e procrastinação nas prioridades",
-      "Instabilidade financeira ou medo da escassez",
-      "Sensação de solidão ou descompasso com as pessoas ao redor"
+      "Sobrecarga mental, excesso de ruído e estresse",
+      "Falta de foco e procrastinação nas prioridades-chave",
+      "Insegurança financeira ou receio de escassez",
+      "Solidão ou descompasso energético com quem me cerca"
     ]
   },
   {
     id: 6,
     category: "Momento Atual",
-    title: "Qual o seu nível médio de energia ao acordar pela manhã?",
+    subtitle: "Energia Vital",
+    title: "Qual o seu nível de vitalidade ao abrir os olhos pela manhã?",
     options: [
-      "Baixo, já acordo cansado(a) e preocupado(a)",
-      "Médio, preciso de esforço para engrenar",
-      "Bom, mas oscila bastante ao longo do dia",
-      "Alto, acordo grato(a) e disposto(a)"
+      "Baixo, já acordo cansado(a) e com preocupações",
+      "Médio, levo bastante tempo para engrenar o ritmo",
+      "Bom, mas sinto quedas bruscas de energia à tarde",
+      "Alto, acordo em estado de gratidão, foco e disposição"
     ]
   },
   {
     id: 7,
     category: "Momento Atual",
+    subtitle: "Linha de Transmutação",
     title: "Em quanto tempo você quer consolidar essa nova fase de realizações?",
     options: [
-      "Nos próximos 7 a 21 dias (mudança imediata de frequência)",
-      "Em até 3 meses (reprogramação profunda)",
-      "Ao longo deste ano (transformação estrutural)",
-      "Quero manter isso como estilo de vida contínuo"
+      "Nos próximos 7 a 21 dias (salto quântico de frequência)",
+      "Em até 3 meses (reprogramação profunda e sustentável)",
+      "Ao longo deste ano (transformação estrutural de vida)",
+      "Quero ancorar isso como um estilo de vida permanente"
     ]
   },
 
@@ -94,45 +119,49 @@ export const QUESTIONS = [
   {
     id: 8,
     category: "Crenças & Bloqueios",
-    title: "Qual frase ressoa mais com a sua voz interna autocrítica?",
+    subtitle: "Voz Interna",
+    title: "Qual frase oculta ressoa mais com a sua autocrítica subconsciente?",
     options: [
-      "\"Eu preciso trabalhar até a exaustão para ter valor\"",
-      "\"E se der tudo errado e eu passar vergonha?\"",
-      "\"As coisas boas duram pouco na minha vida\"",
-      "\"Eu nunca termino com excelência o que começo\""
+      "\"Eu preciso me desgastar até o limite para ter valor\"",
+      "\"E se eu me expuser e for rejeitado(a) ou julgado(a)?\"",
+      "\"As coisas boas demoram e duram pouco para mim\"",
+      "\"Eu nunca consigo finalizar com maestria o que começo\""
     ]
   },
   {
     id: 9,
     category: "Crenças & Bloqueios",
-    title: "O que você sente ao falar de grandes quantias financeiras?",
+    subtitle: "Ressonância do Dinheiro",
+    title: "O que você experimenta corporalmente ao falar de grandes fortunas?",
     options: [
-      "Tensão ou desconforto corporal sutil",
-      "Ceticismo de que seja viável para mim",
-      "Desejo ardente, mas sensação de distância",
-      "Tranquilidade e consciência de fluxo natural"
+      "Uma contração ou aperto sutil na respiração",
+      "Ceticismo de que essa realidade seja acessível a mim",
+      "Desejo ardente, mas uma sensação de distância intransponível",
+      "Paz natural, receptividade e certeza de merecimento"
     ]
   },
   {
     id: 10,
     category: "Crenças & Bloqueios",
-    title: "Qual padrão negativo você mais deseja quebrar definitivamente?",
+    subtitle: "Quebra de Ciclo",
+    title: "Qual padrão inconsciente você mais deseja romper hoje?",
     options: [
-      "Autossabotagem quando estou prestes a vencer",
-      "Necessidade constante de aprovação dos outros",
-      "Medo de cobrar o valor justo ou se posicionar",
-      "Ficar preso(a) no passado e em arrependimentos"
+      "Autossabotagem exatamente quando estou prestes a triunfar",
+      "Necessidade de validação e aprovação alheia",
+      "Dificuldade de cobrar o valor justo pelo meu trabalho",
+      "Apego emocional a erros e arrependimentos passados"
     ]
   },
   {
     id: 11,
     category: "Crenças & Bloqueios",
-    title: "Qual memória ou fase passada ainda drena sua energia mental?",
+    subtitle: "Liberação de Memórias",
+    title: "Qual experiência anterior ainda drena sua força mental se você lembrar?",
     options: [
-      "Fracassos ou dívidas em projetos anteriores",
-      "Términos ou mágoas de relacionamentos passados",
-      "Críticas duras que ouvi na infância/adolescência",
-      "Nenhuma, já ressignifiquei e quero focar adiante"
+      "Prejuízos, dívidas ou negócios que não deram certo",
+      "Mágoas, rupturas ou traições em relacionamentos",
+      "Críticas duras recebidas na infância ou juventude",
+      "Nenhuma, já transmutou e meu olhar está 100% no horizonte"
     ]
   },
 
@@ -140,45 +169,49 @@ export const QUESTIONS = [
   {
     id: 12,
     category: "Finanças & Abundância",
-    title: "Qual é a sua relação com o fluxo de dinheiro hoje?",
+    subtitle: "Fluxo de Prosperidade",
+    title: "Qual é a sua relação com o fluxo financeiro atualmente?",
     options: [
-      "O dinheiro entra e sai rapidamente com urgências",
-      "Tenho estabilidade, mas não consigo alavancar patrimônio",
-      "Estou construindo múltiplas fontes e quero destravar a mente",
-      "Prospero com facilidade e busco liberdade financeira total"
+      "O dinheiro entra e sai rapidamente com urgências imprevistas",
+      "Tenho estabilidade, mas não consigo multiplicar patrimônio",
+      "Estou abrindo novas fontes e quero destravar a mentalidade",
+      "Flui com leveza e já busco liberdade financeira integral"
     ]
   },
   {
     id: 13,
     category: "Finanças & Abundância",
-    title: "Qual marco financeiro faria você se sentir verdadeiramente livre?",
+    subtitle: "Marco de Conquista",
+    title: "Qual marco prático faria você suspirar com alívio e plenitude?",
     options: [
-      "Quitar todas as pendências e ter reserva de segurança",
-      "Renda mensal de 5 dígitos (R$ 10k a R$ 30k+)",
-      "Independência geográfica trabalhando de qualquer lugar",
-      "Patrimônio sólido gerando renda passiva perpétua"
+      "Zero dívidas e uma reserva de tranquilidade intocável",
+      "Faturamento mensal expressivo de 5 dígitos (R$ 15k a 50k+)",
+      "Liberdade geográfica total para trabalhar de onde quiser",
+      "Múltiplos ativos gerando renda passiva perpétua"
     ]
   },
   {
     id: 14,
     category: "Finanças & Abundância",
-    title: "O que a prosperidade representa para você no nível mais alto?",
+    subtitle: "Significado Superior",
+    title: "O que a riqueza representa no seu nível mais espiritual e nobre?",
     options: [
-      "Tranquilidade para cuidar de quem eu amo",
-      "Poder de escolha, liberdade de tempo e viagens",
-      "Impactar vidas e contribuir com grandes causas",
-      "Autonomia e soberania pessoal completa"
+      "Paz de espírito para cuidar e blindar minha família",
+      "Soberania sobre meu próprio tempo e poder de viajar o mundo",
+      "Capacidade de multiplicar impacto e financiar grandes causas",
+      "Total desvinculação da escassez e da subserviência"
     ]
   },
   {
     id: 15,
     category: "Finanças & Abundância",
-    title: "Como você reage quando investe no seu próprio desenvolvimento?",
+    subtitle: "Investimento Pessoal",
+    title: "Como seu coração reage ao investir em você e na sua sabedoria?",
     options: [
-      "Sinto culpa ou medo de não ter retorno",
-      "Hesito, mas reconheço que é necessário",
-      "Investir em mim é a minha prioridade absoluta",
-      "Faço com entusiasmo sabendo que multiplica"
+      "Com medo da perda ou dúvida se terei retorno real",
+      "Hesito um pouco, mas sei que não posso ficar estagnado(a)",
+      "Invisto com certeza absoluta de que sou meu maior ativo",
+      "Pago com gratidão sabendo que tudo retorna multiplicado"
     ]
   },
 
@@ -186,34 +219,37 @@ export const QUESTIONS = [
   {
     id: 16,
     category: "Relacionamentos & Afeto",
-    title: "Como está o círculo de pessoas mais próximas a você hoje?",
+    subtitle: "Egrégora Social",
+    title: "Como é o campo vibracional das pessoas mais próximas a você?",
     options: [
-      "Muitas pessoas tóxicas ou pessimistas ao meu redor",
-      "Gente boa, mas sem a mesma ambição de crescimento",
-      "Estou em transição, buscando novas amizades e parcerias",
-      "Cercado(a) por mentores e parceiros inspiradores"
+      "Muitas queixas, fofocas e pessimismo que me sobrecarregam",
+      "Pessoas gentis, mas acomodadas e sem ambição de crescer",
+      "Estou em transição, selecionando novas companhias e mentores",
+      "Círculo nobre de pessoas inspiradoras, leais e prósperas"
     ]
   },
   {
     id: 17,
     category: "Relacionamentos & Afeto",
-    title: "No amor, qual é a sua busca central neste momento?",
+    subtitle: "Campo do Coração",
+    title: "No amor e intimidade, qual é o seu anseio mais profundo agora?",
     options: [
-      "Curar feridas passadas e recuperar meu amor-próprio",
-      "Atrair um parceiro(a) consciente e leal de alto valor",
-      "Harmonizar e elevar a chama da minha relação atual",
-      "Foco total em mim agora, sem buscar relacionamento"
+      "Curar feridas passadas e elevar meu autoamor primeiro",
+      "Atrair uma alma compatível, madura, leal e de alto valor",
+      "Reacender a chama e a intimidade espiritual da relação atual",
+      "Plena solitude construtiva, focado(a) na minha maestria pessoal"
     ]
   },
   {
     id: 18,
     category: "Relacionamentos & Afeto",
-    title: "Você consegue estabelecer limites saudáveis sem se sentir culpado(a)?",
+    subtitle: "Limites Sagrados",
+    title: "Você consegue honrar o seu \"Não\" sem carregar culpa?",
     options: [
-      "Raramente, costumo agradar aos outros em prejuízo próprio",
-      "Tenho dificuldade, mas estou aprendendo a dizer não",
-      "Consigo na maioria das situações profissionais e pessoais",
-      "Sim, respeito meu tempo e energia com firmeza e carinho"
+      "Raramente, me sacrifico para não decepcionar os outros",
+      "Sinto desconforto, mas venho treinando minha firmeza",
+      "Consigo impor respeito sem perder a gentileza",
+      "Totalmente. Minha energia é sagrada e decido onde investi-la"
     ]
   },
 
@@ -221,45 +257,49 @@ export const QUESTIONS = [
   {
     id: 19,
     category: "Saúde & Vitalidade",
-    title: "Como você cuida do seu templo físico (corpo, sono e nutrição)?",
+    subtitle: "Templo Físico",
+    title: "Como você tem honrado o templo que abriga sua alma (corpo e sono)?",
     options: [
-      "Tenho negligenciado por falta de tempo ou ânimo",
-      "Faço o básico, mas preciso de mais disciplina",
-      "Tenho bons hábitos e busco alta performance corporal",
-      "Totalmente dedicado(a) à saúde física, mental e espiritual"
+      "Tenho negligenciado pela correria e rotina frenética",
+      "Cumpro o básico, mas preciso de muito mais disciplina",
+      "Mantenho bons hábitos e busco longevidade e alta energia",
+      "Cuido com reverência diária de cada detalhe da minha saúde"
     ]
   },
   {
     id: 20,
     category: "Saúde & Vitalidade",
-    title: "Qual o melhor momento do seu dia para reprogramação mental?",
+    subtitle: "Janela Hipnagógica",
+    title: "Qual momento do seu dia oferece mais quietude para reprogramar a mente?",
     options: [
-      "Logo ao acordar (em estado alfa matinal)",
-      "Durante uma pausa no meio do dia para recarregar",
-      "À noite, antes de dormir (ancoragem no sono theta)",
-      "Em momentos aleatórios conforme minha necessidade"
+      "Logo ao despertar, ainda sob o manto do estado Alfa matinal",
+      "No meio do dia, em uma pausa de reconexão de 15 minutos",
+      "À noite, na cama, permitindo que as ondas Theta ancorem o sono",
+      "Em horários flexíveis, conforme minha intuição pedir"
     ]
   },
   {
     id: 21,
     category: "Saúde & Vitalidade",
-    title: "Qual som ambiente conecta mais profundamente a sua mente?",
+    subtitle: "Acústica da Alma",
+    title: "Qual sonoridade mais acalma seus pensamentos e conecta com o invisível?",
     options: [
-      "Frequências Theta e 432 Hz de cura harmônica",
-      "Sons de chuva suave e tempestade relaxante",
-      "Ondas do oceano e brisa do mar",
-      "Tigelas tibetanas e campainhas zen"
+      "Frequências solfeggio puras (432 Hz e ondas Theta binaurais)",
+      "Sons de chuva profunda e tempestades suaves na floresta",
+      "Ondas quebrando na praia com brisa marítima tranquila",
+      "Tigelas de cristal tibetanas e harmônicos meditativos"
     ]
   },
   {
     id: 22,
     category: "Ancoragem Final",
-    title: "Você está pronto(a) para assumir a identidade da sua versão realizada agora?",
+    subtitle: "Salto Quântico",
+    title: "Você está pronto(a) para se despedir da velha versão e assumir seu poder?",
     options: [
-      "Sim! Abro mão do velho eu e aceito minha nova realidade",
-      "Estou pronto(a), com o coração aberto para aprender",
-      "Sim, preciso apenas de um guia diário consistente",
-      "Com certeza, nada vai me parar a partir de hoje"
+      "Sim! Abro mão de toda limitação e aceito minha nova identidade",
+      "Estou com o coração pronto e receptivo para esta jornada",
+      "Sim, assumo o compromisso sagrado de praticar diariamente",
+      "Absolutamente sim. Minha nova vida começa neste exato instante!"
     ]
   }
 ];
@@ -271,79 +311,158 @@ interface QuizProps {
 export const QuizScreen: React.FC<QuizProps> = ({ onComplete }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<QuizAnswer[]>([]);
+  const [selectedOption, setSelectedOption] = useState<string | null>(null);
 
   const currentQ = QUESTIONS[currentIndex];
-  const progressPercent = ((currentIndex + 1) / QUESTIONS.length) * 100;
+  const totalQuestions = QUESTIONS.length;
+  const progressPercent = ((currentIndex + 1) / totalQuestions) * 100;
+  const categoryIcon = CATEGORY_ICONS[currentQ.category] || "✦";
 
   const handleSelectOption = (option: string) => {
-    const newAnswer: QuizAnswer = {
-      question_id: currentQ.id,
-      category: currentQ.category,
-      question: currentQ.title,
-      answer: option,
-    };
+    setSelectedOption(option);
 
-    const updated = [...selectedAnswers, newAnswer];
-    setSelectedAnswers(updated);
+    setTimeout(() => {
+      const newAnswer: QuizAnswer = {
+        question_id: currentQ.id,
+        category: currentQ.category,
+        question: currentQ.title,
+        answer: option,
+      };
 
-    if (currentIndex + 1 < QUESTIONS.length) {
-      setCurrentIndex(currentIndex + 1);
-    } else {
-      onComplete(updated);
-    }
+      const updated = [...selectedAnswers, newAnswer];
+      setSelectedAnswers(updated);
+      setSelectedOption(null);
+
+      if (currentIndex + 1 < totalQuestions) {
+        setCurrentIndex(currentIndex + 1);
+      } else {
+        onComplete(updated);
+      }
+    }, 220);
   };
 
   const handleBack = () => {
     if (currentIndex > 0) {
       setCurrentIndex(currentIndex - 1);
       setSelectedAnswers(selectedAnswers.slice(0, -1));
+      setSelectedOption(null);
     }
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header com Categoria, Progresso e Botão Voltar */}
+      <StatusBar barStyle="light-content" backgroundColor="#070512" />
+
+      {/* Glow Superior de Fundo */}
+      <View style={styles.ambientGlow} />
+
+      {/* Header com Navegação e Progresso */}
       <View style={styles.header}>
-        <View style={styles.topBar}>
+        <View style={styles.navRow}>
           {currentIndex > 0 ? (
-            <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-              <Text style={styles.backButtonText}>← Voltar</Text>
+            <TouchableOpacity onPress={handleBack} style={styles.backButton} activeOpacity={0.7}>
+              <Text style={styles.backButtonArrow}>‹</Text>
+              <Text style={styles.backButtonText}>Voltar</Text>
             </TouchableOpacity>
           ) : (
-            <View style={{ width: 60 }} />
+            <View style={{ width: 70 }} />
           )}
 
-          <Text style={styles.categoryBadge}>{currentQ.category.toUpperCase()}</Text>
-          <View style={{ width: 60 }} />
+          {/* Badge da Categoria com Ícone e Borda Dourada */}
+          <View style={styles.badgePill}>
+            <Text style={styles.badgeIcon}>{categoryIcon}</Text>
+            <Text style={styles.badgeText}>{currentQ.category.toUpperCase()}</Text>
+          </View>
+
+          <View style={styles.stepCounterWrapper}>
+            <Text style={styles.stepCurrent}>{currentIndex + 1}</Text>
+            <Text style={styles.stepTotal}>/{totalQuestions}</Text>
+          </View>
         </View>
 
-        <Text style={styles.progressText}>
-          Pergunta {currentIndex + 1} de {QUESTIONS.length}
+        {/* Barra de Progresso com Brilho */}
+        <View style={styles.progressBarTrack}>
+          <View style={[styles.progressBarFill, { width: `${progressPercent}%` }]} />
+        </View>
+
+        <Text style={styles.progressPercentLabel}>
+          {Math.round(progressPercent)}% da sua sintonização
         </Text>
-
-        <View style={styles.progressBar}>
-          <View style={[styles.progressFill, { width: `${progressPercent}%` }]} />
-        </View>
       </View>
 
-      {/* Conteúdo da Pergunta */}
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      {/* Conteúdo Principal com Rolagem Suave */}
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Subtítulo / Tema */}
+        <Text style={styles.questionSubtitle}>{currentQ.subtitle.toUpperCase()}</Text>
+
+        {/* Título Principal da Pergunta */}
         <Text style={styles.questionTitle}>{currentQ.title}</Text>
 
-        <View style={styles.optionsContainer}>
-          {currentQ.options.map((opt, idx) => (
-            <TouchableOpacity
-              key={idx}
-              style={styles.optionButton}
-              activeOpacity={0.75}
-              onPress={() => handleSelectOption(opt)}
-            >
-              <View style={styles.optionNumberCircle}>
-                <Text style={styles.optionNumberText}>{String.fromCharCode(65 + idx)}</Text>
-              </View>
-              <Text style={styles.optionText}>{opt}</Text>
-            </TouchableOpacity>
-          ))}
+        {/* Lista de Opções Estilizadas com Glassmorphism */}
+        <View style={styles.optionsList}>
+          {currentQ.options.map((opt, idx) => {
+            const isSelected = selectedOption === opt;
+            const letter = String.fromCharCode(65 + idx);
+
+            return (
+              <TouchableOpacity
+                key={idx}
+                style={[
+                  styles.optionCard,
+                  isSelected && styles.optionCardSelected,
+                ]}
+                activeOpacity={0.85}
+                onPress={() => handleSelectOption(opt)}
+              >
+                {/* Indicador de Letra (A, B, C, D) */}
+                <View
+                  style={[
+                    styles.letterBadge,
+                    isSelected && styles.letterBadgeSelected,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.letterText,
+                      isSelected && styles.letterTextSelected,
+                    ]}
+                  >
+                    {letter}
+                  </Text>
+                </View>
+
+                {/* Texto da Opção */}
+                <Text
+                  style={[
+                    styles.optionLabel,
+                    isSelected && styles.optionLabelSelected,
+                  ]}
+                >
+                  {opt}
+                </Text>
+
+                {/* Marcador Sutil à Direita */}
+                <View
+                  style={[
+                    styles.radioIndicator,
+                    isSelected && styles.radioIndicatorSelected,
+                  ]}
+                >
+                  {isSelected && <View style={styles.radioDot} />}
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        {/* Dica Inspiradora no Rodapé */}
+        <View style={styles.footerNote}>
+          <Text style={styles.footerNoteText}>
+            🔒 Suas respostas alimentam a IA para afinar a frequência da sua meditação
+          </Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -353,101 +472,206 @@ export const QuizScreen: React.FC<QuizProps> = ({ onComplete }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A0814',
+    backgroundColor: '#070512',
+  },
+  ambientGlow: {
+    position: 'absolute',
+    top: -80,
+    left: '20%',
+    width: 240,
+    height: 240,
+    borderRadius: 120,
+    backgroundColor: 'rgba(155, 81, 224, 0.12)',
   },
   header: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 10,
+    paddingHorizontal: 22,
+    paddingTop: 12,
+    paddingBottom: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
   },
-  topBar: {
+  navRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 10,
+    marginBottom: 14,
   },
   backButton: {
-    paddingVertical: 4,
-    paddingHorizontal: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+    width: 70,
+  },
+  backButtonArrow: {
+    color: '#9B51E0',
+    fontSize: 22,
+    marginRight: 4,
+    fontWeight: '300',
   },
   backButtonText: {
-    color: '#8A85A5',
-    fontSize: 14,
+    color: '#A29DB8',
+    fontSize: 13,
     fontWeight: '600',
   },
-  categoryBadge: {
-    color: '#D4AF37',
+  badgePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(212, 175, 55, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(212, 175, 55, 0.35)',
+    paddingVertical: 5,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    gap: 6,
+  },
+  badgeIcon: {
+    fontSize: 12,
+  },
+  badgeText: {
+    color: '#E5C158',
     fontSize: 11,
-    letterSpacing: 2,
+    letterSpacing: 1.5,
     fontWeight: '700',
-    textAlign: 'center',
   },
-  progressText: {
-    color: '#8A85A5',
-    fontSize: 13,
-    marginBottom: 8,
-    textAlign: 'center',
+  stepCounterWrapper: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'flex-end',
+    width: 70,
   },
-  progressBar: {
-    height: 5,
-    backgroundColor: '#1E1838',
-    borderRadius: 3,
+  stepCurrent: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  stepTotal: {
+    color: '#655F7E',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  progressBarTrack: {
+    height: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 2,
     overflow: 'hidden',
   },
-  progressFill: {
+  progressBarFill: {
     height: '100%',
     backgroundColor: '#9B51E0',
-    borderRadius: 3,
+    borderRadius: 2,
+  },
+  progressPercentLabel: {
+    color: '#716C8A',
+    fontSize: 11,
+    marginTop: 6,
+    textAlign: 'right',
+    letterSpacing: 0.5,
   },
   content: {
     paddingHorizontal: 22,
-    paddingTop: 20,
+    paddingTop: 26,
     paddingBottom: 40,
-    flexGrow: 1,
-    justifyContent: 'center',
+  },
+  questionSubtitle: {
+    color: '#D4AF37',
+    fontSize: 11,
+    letterSpacing: 2.2,
+    fontWeight: '700',
+    marginBottom: 8,
   },
   questionTitle: {
     color: '#FFFFFF',
     fontSize: 23,
     fontWeight: '700',
-    lineHeight: 32,
+    lineHeight: 33,
     marginBottom: 28,
-    textAlign: 'center',
   },
-  optionsContainer: {
+  optionsList: {
     gap: 12,
   },
-  optionButton: {
-    backgroundColor: '#15102A',
-    borderColor: '#2D2354',
-    borderWidth: 1.2,
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    borderRadius: 14,
+  optionCard: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: 'rgba(25, 20, 48, 0.65)',
+    borderWidth: 1.2,
+    borderColor: 'rgba(155, 81, 224, 0.18)',
+    borderRadius: 18,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    minHeight: 68,
   },
-  optionNumberCircle: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: 'rgba(155, 81, 224, 0.15)',
-    borderWidth: 1,
+  optionCardSelected: {
+    backgroundColor: 'rgba(155, 81, 224, 0.18)',
     borderColor: '#9B51E0',
+    transform: [{ scale: 1.01 }],
+  },
+  letterBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
+    marginRight: 14,
   },
-  optionNumberText: {
-    color: '#D4AF37',
-    fontSize: 12,
+  letterBadgeSelected: {
+    backgroundColor: '#9B51E0',
+    borderColor: '#9B51E0',
+  },
+  letterText: {
+    color: '#BDB7D4',
+    fontSize: 13,
     fontWeight: '700',
   },
-  optionText: {
-    color: '#E0DBF5',
+  letterTextSelected: {
+    color: '#FFFFFF',
+  },
+  optionLabel: {
+    color: '#E3DFF2',
     fontSize: 15,
     fontWeight: '500',
+    lineHeight: 22,
     flex: 1,
-    lineHeight: 21,
+  },
+  optionLabelSelected: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  radioIndicator: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 10,
+  },
+  radioIndicatorSelected: {
+    borderColor: '#D4AF37',
+  },
+  radioDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#D4AF37',
+  },
+  footerNote: {
+    marginTop: 30,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  footerNoteText: {
+    color: '#7B7599',
+    fontSize: 12,
+    textAlign: 'center',
+    lineHeight: 17,
   },
 });

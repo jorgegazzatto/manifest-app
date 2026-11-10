@@ -1,5 +1,13 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+} from 'react-native';
 
 interface PlayerProps {
   userName: string;
@@ -10,16 +18,36 @@ interface PlayerProps {
   onReset: () => void;
 }
 
+const AMBIENT_TRACKS = [
+  { id: '432', label: '432 Hz Solfeggio', sub: 'Cura & Equilíbrio' },
+  { id: 'theta', label: 'Ondas Theta (6Hz)', sub: 'Reprogramação Profunda' },
+  { id: 'rain', label: 'Chuva Cósmica', sub: 'Relaxamento do Sistema' },
+];
+
 export const PlayerScreen: React.FC<PlayerProps> = ({
   userName,
   focusArea,
   script,
-  audioUrl,
   durationSeconds = 360,
   onReset,
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [activeTab, setActiveTab] = useState<'visualizer' | 'script'>('visualizer');
+  const [activeTab, setActiveTab] = useState<'player' | 'script'>('player');
+  const [selectedAmbient, setSelectedAmbient] = useState('432');
+  const [currentSeconds, setCurrentSeconds] = useState(0);
+
+  // Simulação de cronômetro quando em reprodução
+  useEffect(() => {
+    let interval: any = null;
+    if (isPlaying) {
+      interval = setInterval(() => {
+        setCurrentSeconds((prev) => (prev >= durationSeconds ? 0 : prev + 1));
+      }, 1000);
+    } else {
+      clearInterval(interval);
+    }
+    return () => clearInterval(interval);
+  }, [isPlaying, durationSeconds]);
 
   const formatTime = (secs: number) => {
     const m = Math.floor(secs / 60);
@@ -27,79 +55,154 @@ export const PlayerScreen: React.FC<PlayerProps> = ({
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
+  const progressPercent = (currentSeconds / durationSeconds) * 100;
+
+  // Barras de onda para o visualizador sonoro
+  const waveHeights = isPlaying
+    ? [28, 44, 18, 56, 32, 48, 22, 60, 36, 42, 20, 52, 38, 26]
+    : [14, 20, 12, 22, 16, 20, 14, 24, 18, 16, 12, 20, 16, 14];
+
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#060410" />
+
+      {/* Glow Cósmico Central */}
+      <View style={styles.centralGlow} />
+
       {/* Top Header */}
       <View style={styles.header}>
-        <Text style={styles.tagline}>ÁUDIO REPROGRAMADOR QUÂNTICO</Text>
-        <Text style={styles.title}>{focusArea}</Text>
-        <Text style={styles.subtitle}>Sessão personalizada para {userName}</Text>
+        <View style={styles.badgeWrapper}>
+          <Text style={styles.badgeText}>SESSÃO QUÂNTICA PERSONALIZADA</Text>
+        </View>
+        <Text style={styles.title} numberOfLines={1}>{focusArea}</Text>
+        <Text style={styles.subtitle}>Frequência sintonizada para {userName}</Text>
 
-        {/* Tab Selector */}
-        <View style={styles.tabContainer}>
+        {/* Seletor de Abas */}
+        <View style={styles.tabBar}>
           <TouchableOpacity
-            style={[styles.tabButton, activeTab === 'visualizer' && styles.tabButtonActive]}
-            onPress={() => setActiveTab('visualizer')}
+            style={[styles.tabItem, activeTab === 'player' && styles.tabItemActive]}
+            onPress={() => setActiveTab('player')}
+            activeOpacity={0.8}
           >
-            <Text style={[styles.tabText, activeTab === 'visualizer' && styles.tabTextActive]}>
-              Frequência
+            <Text style={[styles.tabText, activeTab === 'player' && styles.tabTextActive]}>
+              🎧 Áudio & Frequência
             </Text>
           </TouchableOpacity>
+
           <TouchableOpacity
-            style={[styles.tabButton, activeTab === 'script' && styles.tabButtonActive]}
+            style={[styles.tabItem, activeTab === 'script' && styles.tabItemActive]}
             onPress={() => setActiveTab('script')}
+            activeOpacity={0.8}
           >
             <Text style={[styles.tabText, activeTab === 'script' && styles.tabTextActive]}>
-              Roteiro de Afirmações
+              📜 Roteiro Sagrado
             </Text>
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* Main Content Body */}
-      {activeTab === 'visualizer' ? (
-        <View style={styles.visualizerContainer}>
-          <View style={[styles.circleOuter, isPlaying && styles.circleOuterPulsing]}>
-            <View style={styles.circleMiddle}>
-              <View style={styles.circleInner}>
-                <Text style={styles.frequencyText}>432 Hz</Text>
-                <Text style={styles.frequencySub}>Ondas Theta</Text>
-                <Text style={styles.frequencyNote}>Sintonia Quântica</Text>
+      {/* Conteúdo: Aba Player ou Aba Roteiro */}
+      {activeTab === 'player' ? (
+        <View style={styles.playerBody}>
+          {/* Anéis de Ressonância Harmônica (Geometria Sagrada) */}
+          <View style={styles.visualizerContainer}>
+            <View style={[styles.outerRing, isPlaying && styles.outerRingActive]}>
+              <View style={[styles.middleRing, isPlaying && styles.middleRingActive]}>
+                <View style={styles.innerOrb}>
+                  <Text style={styles.frequencyValue}>432 Hz</Text>
+                  <Text style={styles.frequencyType}>ONDAS THETA</Text>
+                  <View style={styles.liveIndicator}>
+                    <View style={[styles.liveDot, isPlaying && styles.liveDotPulsing]} />
+                    <Text style={styles.liveText}>
+                      {isPlaying ? 'RESSONÂNCIA ATIVA' : 'EM REPOUSO'}
+                    </Text>
+                  </View>
+                </View>
               </View>
+            </View>
+
+            {/* Barras de Ondas Sonoras */}
+            <View style={styles.waveBarContainer}>
+              {waveHeights.map((h, i) => (
+                <View
+                  key={i}
+                  style={[
+                    styles.waveBar,
+                    { height: h },
+                    isPlaying && { backgroundColor: i % 2 === 0 ? '#D4AF37' : '#A855F7' }
+                  ]}
+                />
+              ))}
             </View>
           </View>
 
-          <View style={styles.timeInfo}>
-            <Text style={styles.timeLabel}>
-              {isPlaying ? 'Reproduzindo Sessão' : 'Pronto para Conectar'}
-            </Text>
-            <Text style={styles.timeCounter}>
-              {isPlaying ? '01:24' : '00:00'} / {formatTime(durationSeconds)}
-            </Text>
+          {/* Seletor de Frequência Ambiente */}
+          <View style={styles.ambientSelector}>
+            <Text style={styles.ambientLabel}>AMBIENTAÇÃO SONORA</Text>
+            <View style={styles.ambientList}>
+              {AMBIENT_TRACKS.map((t) => {
+                const isCurrent = selectedAmbient === t.id;
+                return (
+                  <TouchableOpacity
+                    key={t.id}
+                    style={[styles.ambientChip, isCurrent && styles.ambientChipActive]}
+                    onPress={() => setSelectedAmbient(t.id)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.ambientChipTitle, isCurrent && styles.ambientChipTitleActive]}>
+                      {t.label}
+                    </Text>
+                    <Text style={[styles.ambientChipSub, isCurrent && styles.ambientChipSubActive]}>
+                      {t.sub}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+
+          {/* Barra de Progresso do Áudio */}
+          <View style={styles.timelineContainer}>
+            <View style={styles.timelineTrack}>
+              <View style={[styles.timelineFill, { width: `${progressPercent}%` }]} />
+              <View style={[styles.timelineKnob, { left: `${Math.min(96, progressPercent)}%` }]} />
+            </View>
+            <View style={styles.timeRow}>
+              <Text style={styles.timeText}>{formatTime(currentSeconds)}</Text>
+              <Text style={styles.timeText}>{formatTime(durationSeconds)}</Text>
+            </View>
           </View>
         </View>
       ) : (
-        <ScrollView style={styles.scriptContainer} showsVerticalScrollIndicator={false}>
-          <Text style={styles.scriptText}>
-            {script || 'Carregando o seu roteiro personalizado...'}
-          </Text>
+        /* Aba Roteiro Sagrado */
+        <ScrollView style={styles.scriptScroll} showsVerticalScrollIndicator={false}>
+          <View style={styles.scriptCard}>
+            <View style={styles.scriptHeader}>
+              <Text style={styles.scriptHeaderTag}>✦ ARQUÉTIPO PERSONALIZADO</Text>
+              <Text style={styles.scriptHeaderTitle}>Instruções de Reprogramação</Text>
+            </View>
+            <Text style={styles.scriptBody}>
+              {script || 'Aguardando sincronização do roteiro...'}
+            </Text>
+          </View>
         </ScrollView>
       )}
 
-      {/* Bottom Controls */}
-      <View style={styles.controlsContainer}>
+      {/* Controles Principais Inferiores */}
+      <View style={styles.footerControls}>
         <TouchableOpacity
-          style={[styles.playButton, isPlaying && styles.playButtonPlaying]}
+          style={[styles.playButton, isPlaying && styles.playButtonActive]}
           activeOpacity={0.85}
           onPress={() => setIsPlaying(!isPlaying)}
         >
-          <Text style={styles.playButtonText}>
-            {isPlaying ? '❚❚ Pausar Sessão' : '► Iniciar Reprogramação'}
+          <Text style={styles.playIcon}>{isPlaying ? '❚❚' : '►'}</Text>
+          <Text style={styles.playLabel}>
+            {isPlaying ? 'PAUSAR SESSÃO' : 'INICIAR MANIFESTAÇÃO'}
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.resetButton} onPress={onReset}>
-          <Text style={styles.resetText}>Refazer Questionário</Text>
+        <TouchableOpacity style={styles.resetButton} onPress={onReset} activeOpacity={0.7}>
+          <Text style={styles.resetButtonText}>↺ Refazer Diagnóstico de 22 Etapas</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -109,22 +212,37 @@ export const PlayerScreen: React.FC<PlayerProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#07050F',
+    backgroundColor: '#060410',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 24,
+  },
+  centralGlow: {
+    position: 'absolute',
+    top: '25%',
+    left: '15%',
+    width: 280,
+    height: 280,
+    borderRadius: 140,
+    backgroundColor: 'rgba(155, 81, 224, 0.08)',
   },
   header: {
     alignItems: 'center',
-    marginTop: 10,
+    paddingHorizontal: 20,
+    paddingTop: 12,
   },
-  tagline: {
-    color: '#D4AF37',
-    fontSize: 11,
-    letterSpacing: 2.5,
-    fontWeight: '700',
-    marginBottom: 6,
+  badgeWrapper: {
+    backgroundColor: 'rgba(212, 175, 55, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(212, 175, 55, 0.3)',
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    marginBottom: 8,
+  },
+  badgeText: {
+    color: '#E5C158',
+    fontSize: 10,
+    letterSpacing: 2,
+    fontWeight: '800',
   },
   title: {
     color: '#FFFFFF',
@@ -138,143 +256,289 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginBottom: 16,
   },
-  tabContainer: {
+  tabBar: {
     flexDirection: 'row',
-    backgroundColor: '#15112A',
-    borderRadius: 20,
-    padding: 3,
+    backgroundColor: 'rgba(25, 20, 48, 0.7)',
+    borderRadius: 24,
+    padding: 4,
     borderWidth: 1,
-    borderColor: '#262046',
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    width: '100%',
   },
-  tabButton: {
-    paddingVertical: 6,
-    paddingHorizontal: 16,
-    borderRadius: 16,
+  tabItem: {
+    flex: 1,
+    paddingVertical: 9,
+    borderRadius: 20,
+    alignItems: 'center',
   },
-  tabButtonActive: {
+  tabItemActive: {
     backgroundColor: '#9B51E0',
+    shadowColor: '#9B51E0',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 6,
   },
   tabText: {
-    color: '#8A85A5',
+    color: '#8882A2',
     fontSize: 12,
     fontWeight: '600',
   },
   tabTextActive: {
     color: '#FFFFFF',
+    fontWeight: '700',
+  },
+  playerBody: {
+    flex: 1,
+    justifyContent: 'space-around',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
   },
   visualizerContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginVertical: 20,
   },
-  circleOuter: {
-    width: 230,
-    height: 230,
-    borderRadius: 115,
-    borderWidth: 1.5,
-    borderColor: 'rgba(155, 81, 224, 0.35)',
+  outerRing: {
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    borderWidth: 1,
+    borderColor: 'rgba(155, 81, 224, 0.25)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  circleOuterPulsing: {
-    borderColor: 'rgba(212, 175, 55, 0.6)',
+  outerRingActive: {
+    borderColor: 'rgba(155, 81, 224, 0.55)',
   },
-  circleMiddle: {
+  middleRing: {
     width: 170,
     height: 170,
     borderRadius: 85,
     borderWidth: 1.5,
-    borderColor: 'rgba(212, 175, 55, 0.4)',
+    borderColor: 'rgba(212, 175, 55, 0.25)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  circleInner: {
-    width: 116,
-    height: 116,
-    borderRadius: 58,
-    backgroundColor: '#140F2A',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
+  middleRingActive: {
+    borderColor: 'rgba(212, 175, 55, 0.7)',
+  },
+  innerOrb: {
+    width: 124,
+    height: 124,
+    borderRadius: 62,
+    backgroundColor: '#120D26',
+    borderWidth: 1.5,
     borderColor: '#9B51E0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#9B51E0',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 16,
   },
-  frequencyText: {
-    color: '#D4AF37',
-    fontSize: 19,
+  frequencyValue: {
+    color: '#E5C158',
+    fontSize: 21,
     fontWeight: '800',
   },
-  frequencySub: {
+  frequencyType: {
     color: '#FFFFFF',
-    fontSize: 11,
+    fontSize: 10,
+    letterSpacing: 1.5,
+    fontWeight: '700',
     marginTop: 2,
-    fontWeight: '600',
   },
-  frequencyNote: {
-    color: '#8A85A5',
-    fontSize: 9,
-    marginTop: 3,
-    letterSpacing: 1,
-  },
-  timeInfo: {
+  liveIndicator: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 24,
+    marginTop: 6,
+    gap: 4,
   },
-  timeLabel: {
+  liveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#655F7E',
+  },
+  liveDotPulsing: {
+    backgroundColor: '#10B981',
+  },
+  liveText: {
     color: '#8A85A5',
-    fontSize: 12,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
+    fontSize: 8,
+    fontWeight: '700',
+    letterSpacing: 0.8,
   },
-  timeCounter: {
+  waveBarContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 64,
+    gap: 6,
+    marginTop: 18,
+  },
+  waveBar: {
+    width: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+  },
+  ambientSelector: {
+    marginVertical: 4,
+  },
+  ambientLabel: {
+    color: '#716C8A',
+    fontSize: 10,
+    letterSpacing: 1.5,
+    fontWeight: '700',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  ambientList: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  ambientChip: {
+    flex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.07)',
+    borderRadius: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    alignItems: 'center',
+  },
+  ambientChipActive: {
+    backgroundColor: 'rgba(155, 81, 224, 0.18)',
+    borderColor: '#9B51E0',
+  },
+  ambientChipTitle: {
+    color: '#9E98BA',
+    fontSize: 11,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  ambientChipTitleActive: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
+  ambientChipSub: {
+    color: '#5C5774',
+    fontSize: 9,
+    marginTop: 2,
+    textAlign: 'center',
+  },
+  ambientChipSubActive: {
+    color: '#D4AF37',
+  },
+  timelineContainer: {
+    marginTop: 6,
+  },
+  timelineTrack: {
+    height: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 2,
+    position: 'relative',
+    justifyContent: 'center',
+  },
+  timelineFill: {
+    height: '100%',
+    backgroundColor: '#9B51E0',
+    borderRadius: 2,
+  },
+  timelineKnob: {
+    position: 'absolute',
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#D4AF37',
+    top: -4,
+  },
+  timeRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  timeText: {
+    color: '#7A7596',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  scriptScroll: {
+    flex: 1,
+    paddingHorizontal: 20,
+    marginVertical: 12,
+  },
+  scriptCard: {
+    backgroundColor: 'rgba(18, 14, 38, 0.75)',
+    borderWidth: 1,
+    borderColor: 'rgba(155, 81, 224, 0.2)',
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 16,
+  },
+  scriptHeader: {
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
+    paddingBottom: 12,
+    marginBottom: 14,
+  },
+  scriptHeaderTag: {
+    color: '#D4AF37',
+    fontSize: 11,
+    letterSpacing: 2,
+    fontWeight: '700',
+  },
+  scriptHeaderTitle: {
     color: '#FFFFFF',
     fontSize: 18,
     fontWeight: '700',
     marginTop: 4,
   },
-  scriptContainer: {
-    flex: 1,
-    backgroundColor: '#110D24',
-    borderRadius: 16,
-    padding: 18,
-    marginVertical: 14,
-    borderWidth: 1,
-    borderColor: '#241D42',
-  },
-  scriptText: {
+  scriptBody: {
     color: '#E0DBF5',
-    fontSize: 14,
-    lineHeight: 22,
+    fontSize: 15,
+    lineHeight: 25,
   },
-  controlsContainer: {
-    alignItems: 'center',
+  footerControls: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    paddingTop: 8,
     gap: 12,
   },
   playButton: {
     backgroundColor: '#9B51E0',
-    paddingVertical: 16,
-    paddingHorizontal: 40,
-    borderRadius: 28,
-    width: '100%',
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    borderRadius: 28,
     shadowColor: '#9B51E0',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 10,
+    shadowOpacity: 0.45,
+    shadowRadius: 14,
+    elevation: 8,
+    gap: 10,
   },
-  playButtonPlaying: {
+  playButtonActive: {
     backgroundColor: '#7A32C2',
   },
-  playButtonText: {
+  playIcon: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '800',
+  },
+  playLabel: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '800',
+    letterSpacing: 1.5,
   },
   resetButton: {
+    alignItems: 'center',
     paddingVertical: 6,
-    paddingHorizontal: 16,
   },
-  resetText: {
-    color: '#656080',
-    fontSize: 13,
+  resetButtonText: {
+    color: '#6B6687',
+    fontSize: 12,
+    fontWeight: '600',
   },
 });
