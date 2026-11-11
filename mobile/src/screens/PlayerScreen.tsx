@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,9 @@ import {
   SafeAreaView,
   ScrollView,
   StatusBar,
+  ActivityIndicator,
 } from 'react-native';
+import { Audio } from 'expo-av';
 
 interface PlayerProps {
   userName: string;
@@ -28,26 +30,90 @@ export const PlayerScreen: React.FC<PlayerProps> = ({
   userName,
   focusArea,
   script,
+  audioUrl,
   durationSeconds = 360,
   onReset,
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isLoadingAudio, setIsLoadingAudio] = useState(false);
   const [activeTab, setActiveTab] = useState<'player' | 'script'>('player');
   const [selectedAmbient, setSelectedAmbient] = useState('432');
   const [currentSeconds, setCurrentSeconds] = useState(0);
+  const [totalSeconds, setTotalSeconds] = useState(durationSeconds);
 
-  // Simulação de cronômetro quando em reprodução
+  const soundRef = useRef<Audio.Sound | null>(null);
+
+  // Limpeza de recursos de áudio ao sair da tela
   useEffect(() => {
-    let interval: any = null;
-    if (isPlaying) {
-      interval = setInterval(() => {
-        setCurrentSeconds((prev) => (prev >= durationSeconds ? 0 : prev + 1));
-      }, 1000);
-    } else {
-      clearInterval(interval);
+    return () => {
+      if (soundRef.current) {
+        soundRef.current.unloadAsync().catch(() => {});
+      }
+    };
+  }, []);
+
+  const onPlaybackStatusUpdate = (status: any) => {
+    if (status.isLoaded) {
+      setCurrentSeconds(Math.floor(status.positionMillis / 1000));
+      if (status.durationMillis) {
+        setTotalSeconds(Math.floor(status.durationMillis / 1000));
+      }
+      setIsPlaying(status.isPlaying);
+      if (status.didJustFinish) {
+        setIsPlaying(false);
+        setCurrentSeconds(0);
+      }
     }
-    return () => clearInterval(interval);
-  }, [isPlaying, durationSeconds]);
+  };
+
+  const handleTogglePlay = async () => {
+    try {
+      if (!audioUrl) return;
+
+      if (!soundRef.current) {
+        setIsLoadingAudio(true);
+        await Audio.setAudioModeAsync({
+          allowsRecordingIOS: false,
+          staysActiveInBackground: true,
+          playsInSilentModeIOS: true,
+          shouldDuckAndroid: true,
+          playThroughEarpieceAndroid: false,
+        });
+
+        const { sound } = await Audio.Sound.createAsync(
+          { uri: audioUrl },
+          { shouldPlay: true },
+          onPlaybackStatusUpdate
+        );
+        soundRef.current = sound;
+        setIsPlaying(true);
+        setIsLoadingAudio(false);
+      } else {
+        if (isPlaying) {
+          await soundRef.current.pauseAsync();
+          setIsPlaying(false);
+        } else {
+          await soundRef.current.playAsync();
+          setIsPlaying(true);
+        }
+      }
+    } catch (error) {
+      console.log('Erro ao tocar áudio real:', error);
+      setIsLoadingAudio(false);
+      setIsPlaying(!isPlaying); // fallback visual
+    }
+  };
+
+  const handleReset = async () => {
+    if (soundRef.current) {
+      try {
+        await soundRef.current.stopAsync();
+        await soundRef.current.unloadAsync();
+      } catch (e) {}
+      soundRef.current = null;
+    }
+    onReset();
+  };
 
   const formatTime = (secs: number) => {
     const m = Math.floor(secs / 60);
@@ -55,7 +121,7 @@ export const PlayerScreen: React.FC<PlayerProps> = ({
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  const progressPercent = (currentSeconds / durationSeconds) * 100;
+  const progressPercent = totalSeconds > 0 ? (currentSeconds / totalSeconds) * 100 : 0;
 
   // Barras de onda para o visualizador sonoro
   const waveHeights = isPlaying
@@ -104,7 +170,7 @@ export const PlayerScreen: React.FC<PlayerProps> = ({
       {/* Conteúdo: Aba Player ou Aba Roteiro */}
       {activeTab === 'player' ? (
         <View style={styles.playerBody}>
-          {/* Anéis de Ressonância Harmônica (Geometria Sagrada) */}
+          {/* Anéis de Ressonância Harmônica */}
           <View style={styles.visualizerContainer}>
             <View style={[styles.outerRing, isPlaying && styles.outerRingActive]}>
               <View style={[styles.middleRing, isPlaying && styles.middleRingActive]}>
@@ -114,7 +180,7 @@ export const PlayerScreen: React.FC<PlayerProps> = ({
                   <View style={styles.liveIndicator}>
                     <View style={[styles.liveDot, isPlaying && styles.liveDotPulsing]} />
                     <Text style={styles.liveText}>
-                      {isPlaying ? 'RESSONÂNCIA ATIVA' : 'EM REPOUSO'}
+                      {isPlaying ? 'ÁUDIO ATIVO' : 'EM REPOUSO'}
                     </Text>
                   </View>
                 </View>
@@ -161,15 +227,15 @@ export const PlayerScreen: React.FC<PlayerProps> = ({
             </View>
           </View>
 
-          {/* Barra de Progresso do Áudio */}
+          {/* Barra de Progresso do Áudio Real */}
           <View style={styles.timelineContainer}>
             <View style={styles.timelineTrack}>
               <View style={[styles.timelineFill, { width: `${progressPercent}%` }]} />
-              <View style={[styles.timelineKnob, { left: `${Math.min(96, progressPercent)}%` }]} />
+              <View style={[styles.timelineKnob, { left: `${Math.min(96, Math.max(0, progressPercent))}%` }]} />
             </View>
             <View style={styles.timeRow}>
               <Text style={styles.timeText}>{formatTime(currentSeconds)}</Text>
-              <Text style={styles.timeText}>{formatTime(durationSeconds)}</Text>
+              <Text style={styles.timeText}>{formatTime(totalSeconds)}</Text>
             </View>
           </View>
         </View>
@@ -193,15 +259,22 @@ export const PlayerScreen: React.FC<PlayerProps> = ({
         <TouchableOpacity
           style={[styles.playButton, isPlaying && styles.playButtonActive]}
           activeOpacity={0.85}
-          onPress={() => setIsPlaying(!isPlaying)}
+          onPress={handleTogglePlay}
+          disabled={isLoadingAudio}
         >
-          <Text style={styles.playIcon}>{isPlaying ? '❚❚' : '►'}</Text>
-          <Text style={styles.playLabel}>
-            {isPlaying ? 'PAUSAR SESSÃO' : 'INICIAR MANIFESTAÇÃO'}
-          </Text>
+          {isLoadingAudio ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <>
+              <Text style={styles.playIcon}>{isPlaying ? '❚❚' : '►'}</Text>
+              <Text style={styles.playLabel}>
+                {isPlaying ? 'PAUSAR SESSÃO' : 'OUVIR ÁUDIO GUIADO'}
+              </Text>
+            </>
+          )}
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.resetButton} onPress={onReset} activeOpacity={0.7}>
+        <TouchableOpacity style={styles.resetButton} onPress={handleReset} activeOpacity={0.7}>
           <Text style={styles.resetButtonText}>↺ Refazer Diagnóstico de 22 Etapas</Text>
         </TouchableOpacity>
       </View>

@@ -42,3 +42,19 @@ manifest-app/
    docker compose up -d --build
    ```
 4. A API estará respondendo em `http://IP_DA_VPS/api` ou sob seu domínio com SSL.
+
+## Para visualizar o aplicativo pelo Expo Go, abra o terminal no seu computador e execute:
+
+1. Entrar na pasta do mobile:
+
+   cd c:\Users\jorge\.gemini\antigravity\scratch\manifest-app\mobile
+
+2. Iniciar o Expo:
+   
+   Se o celular estiver no mesmo Wi-Fi do computador:
+
+      npx expo start -c
+
+   Se o celular estiver no 4G / Dados Móveis (ou em rede diferente):
+   
+      npx expo start --tunnel -c
