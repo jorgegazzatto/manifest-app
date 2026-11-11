@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -7,9 +7,8 @@ import {
   SafeAreaView,
   ScrollView,
   StatusBar,
-  ActivityIndicator,
 } from 'react-native';
-import { Audio } from 'expo-av';
+import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 
 interface PlayerProps {
   userName: string;
@@ -34,84 +33,36 @@ export const PlayerScreen: React.FC<PlayerProps> = ({
   durationSeconds = 360,
   onReset,
 }) => {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isLoadingAudio, setIsLoadingAudio] = useState(false);
   const [activeTab, setActiveTab] = useState<'player' | 'script'>('player');
   const [selectedAmbient, setSelectedAmbient] = useState('432');
-  const [currentSeconds, setCurrentSeconds] = useState(0);
-  const [totalSeconds, setTotalSeconds] = useState(durationSeconds);
 
-  const soundRef = useRef<Audio.Sound | null>(null);
+  // Player de Áudio Nativo Oficial do Expo SDK 58
+  const player = useAudioPlayer(audioUrl || null);
+  const status = useAudioPlayerStatus(player);
 
-  // Limpeza de recursos de áudio ao sair da tela
-  useEffect(() => {
-    return () => {
-      if (soundRef.current) {
-        soundRef.current.unloadAsync().catch(() => {});
-      }
-    };
-  }, []);
+  const isPlaying = Boolean(status.playing);
+  const currentSeconds = Math.floor(status.currentTime || 0);
+  const totalSeconds = Math.floor(status.duration || durationSeconds);
 
-  const onPlaybackStatusUpdate = (status: any) => {
-    if (status.isLoaded) {
-      setCurrentSeconds(Math.floor(status.positionMillis / 1000));
-      if (status.durationMillis) {
-        setTotalSeconds(Math.floor(status.durationMillis / 1000));
-      }
-      setIsPlaying(status.isPlaying);
-      if (status.didJustFinish) {
-        setIsPlaying(false);
-        setCurrentSeconds(0);
-      }
-    }
-  };
-
-  const handleTogglePlay = async () => {
+  const handleTogglePlay = () => {
     try {
-      if (!audioUrl) return;
-
-      if (!soundRef.current) {
-        setIsLoadingAudio(true);
-        await Audio.setAudioModeAsync({
-          allowsRecordingIOS: false,
-          staysActiveInBackground: true,
-          playsInSilentModeIOS: true,
-          shouldDuckAndroid: true,
-          playThroughEarpieceAndroid: false,
-        });
-
-        const { sound } = await Audio.Sound.createAsync(
-          { uri: audioUrl },
-          { shouldPlay: true },
-          onPlaybackStatusUpdate
-        );
-        soundRef.current = sound;
-        setIsPlaying(true);
-        setIsLoadingAudio(false);
+      if (!player) return;
+      if (isPlaying) {
+        player.pause();
       } else {
-        if (isPlaying) {
-          await soundRef.current.pauseAsync();
-          setIsPlaying(false);
-        } else {
-          await soundRef.current.playAsync();
-          setIsPlaying(true);
-        }
+        player.play();
       }
-    } catch (error) {
-      console.log('Erro ao tocar áudio real:', error);
-      setIsLoadingAudio(false);
-      setIsPlaying(!isPlaying); // fallback visual
+    } catch (e) {
+      console.log('Erro ao alternar reprodução:', e);
     }
   };
 
-  const handleReset = async () => {
-    if (soundRef.current) {
-      try {
-        await soundRef.current.stopAsync();
-        await soundRef.current.unloadAsync();
-      } catch (e) {}
-      soundRef.current = null;
-    }
+  const handleReset = () => {
+    try {
+      if (player && isPlaying) {
+        player.pause();
+      }
+    } catch (e) {}
     onReset();
   };
 
@@ -260,18 +211,11 @@ export const PlayerScreen: React.FC<PlayerProps> = ({
           style={[styles.playButton, isPlaying && styles.playButtonActive]}
           activeOpacity={0.85}
           onPress={handleTogglePlay}
-          disabled={isLoadingAudio}
         >
-          {isLoadingAudio ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
-          ) : (
-            <>
-              <Text style={styles.playIcon}>{isPlaying ? '❚❚' : '►'}</Text>
-              <Text style={styles.playLabel}>
-                {isPlaying ? 'PAUSAR SESSÃO' : 'OUVIR ÁUDIO GUIADO'}
-              </Text>
-            </>
-          )}
+          <Text style={styles.playIcon}>{isPlaying ? '❚❚' : '►'}</Text>
+          <Text style={styles.playLabel}>
+            {isPlaying ? 'PAUSAR SESSÃO' : 'OUVIR ÁUDIO GUIADO'}
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.resetButton} onPress={handleReset} activeOpacity={0.7}>
